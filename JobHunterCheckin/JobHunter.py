@@ -1,6 +1,6 @@
-# This script pulls from a job website and stores positions into a database. If there is a new posting it notifies the user.
 # CNA 330
-# Zachary Rubin, zrubin@rtc.edu
+# Group project JobHunter Dorin Vozian, Igor Turcan, Vlado Situm, Abdirizak Kulmiye.
+# Tutor: Liviu Patrasco liviu_patrasco@hotmail.com
 import mysql.connector
 import sys
 import json
