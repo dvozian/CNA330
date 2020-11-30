@@ -1,3 +1,9 @@
+# CNA330
+# Group7 Project Pandas Salaries
+# Participants: Dorin Vozian, Vlado Situm, Abdirizak Kulmie
+# Tutoring Liviu Patrasco liviu_patrasco@hotmail.com
+
+
 import pandas as pd
 from sqlalchemy import create_engine
 # make sure to pip install python packages: lxml, sqlalchemy, pymysql
