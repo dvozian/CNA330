@@ -6,22 +6,47 @@
 
 import pandas as pd
 from sqlalchemy import create_engine
-# make sure to pip install python packages: lxml, sqlalchemy, pymysql
+
+# database config
+"""
+db_host = 'database-1.c4r9j10c2wsr.us-east-2.rds.amazonaws.com'
+db_username = 'admin'
+db_password = 'root1root'
+db_port = '3306'
+db_name = 'CNA330'
+"""
+db_host = 'localhost'
+db_username = 'root'
+db_password = 'root'
+db_port = '8889'
+db_name = 'CNA330'
+
+# The url for the source web page
+html_source_url = "https://www.bls.gov/oes/2019/may/oes_nat.htm"
 
 
 # function to create a database connection
 def connect_to_sql():
-    sql_engine = create_engine('mysql+pymysql://root:root@localhost:8889/CNA330')
+    connection_string = "mysql+pymysql://{}:{}@{}:{}/{}".format(db_username, db_password, db_host, db_port, db_name)
+    sql_engine = create_engine(connection_string)
     db_connection = sql_engine.connect()
+    print('Connected to database %s OK' % db_name)
     return db_connection
 
 
+def remove_empty_lines(job_data):
+    job_data = job_data.dropna()
+    job_data = job_data.where(pd.notnull(job_data), None)
+    print('Cleaned empty lines')
+    return job_data
+
+
 # Read the data from web
-jobs = pd.read_html("https://www.bls.gov/oes/2019/may/oes_nat.htm")[1]
+jobs = pd.read_html(html_source_url)[1]
+print('Read HTML page OK')
 
 # Remove empty rows
-jobs = jobs.dropna()
-jobs = jobs.where(pd.notnull(jobs), None)
+jobs = remove_empty_lines(jobs)
 
 # Remove duplicate rows
 jobs = jobs.drop_duplicates()
@@ -34,13 +59,19 @@ jobs['Annual mean wage'] = jobs['Annual mean wage'].astype(float)
 jobs['Mean hourly wage'] = jobs['Mean hourly wage'].replace('[$,()]', '', regex=True)
 jobs['Mean hourly wage'] = jobs['Mean hourly wage'].astype(float)
 jobs['Employment per 1,000 jobs'] = jobs['Employment per 1,000 jobs'].round(decimals=3)
+print('Cleaned and converted data')
 
 # Remove boring columns
 jobs = jobs.drop(axis='columns', labels='Occupation code')
+print('Removed an unneeded column')
 
 # Rename columns: shorten if too long, remove '(' and ')' characters, replace ' ' spaces with '_'
 jobs.rename(columns=lambda x: x[:25].strip(), inplace=True)
 jobs.rename(columns=lambda x: x.replace(' ', '_').replace('(', '').replace(')', ''), inplace=True)
+print('Renamed columns: shortened to 25 characters and removed spaces')
 
 # Insert the data into mysql table, replace if already exists
 jobs.to_sql('job_salaries', con=connect_to_sql(), if_exists='replace', index=False)
+print('Data from {} was successfully saved in the {} database'.format(html_source_url, db_name))
+
+print("Done!")

@@ -10,10 +10,28 @@ import matplotlib.pyplot as pp
 import sys
 
 
+# database config
+"""
+db_host = 'database-1.c4r9j10c2wsr.us-east-2.rds.amazonaws.com'
+db_username = 'admin'
+db_password = 'root1root'
+db_port = '3306'
+db_name = 'CNA330'
+"""
+
+db_host = 'localhost'
+db_username = 'root'
+db_password = 'root'
+db_port = '8889'
+db_name = 'CNA330'
+
 # function to create a database connection
 def connect_to_sql():
-    sql_engine = create_engine('mysql+pymysql://root:root@localhost:8889/CNA330')
+    print('Trying to connect to database: %s' % db_name)
+    connection_string = "mysql+pymysql://{}:{}@{}:{}/{}".format(db_username, db_password, db_host, db_port, db_name)
+    sql_engine = create_engine(connection_string)
     db_connection = sql_engine.connect()
+    print('Connected to database %s OK' % db_name)
     return db_connection
 
 
@@ -22,13 +40,13 @@ def get_jobs_from_database(search_keyword):
                  "where lower(Occupation_title_click_o) like '%" + search_keyword + \
                  "%' limit 30"
     print(search_sql)
-    jobs = pd.read_sql(
-        search_sql,
-        connect_to_sql())
+    jobs = pd.read_sql(search_sql, connect_to_sql())
+    print('Read data from the database')
     return jobs
 
 
 def plot_jobs(jobs):
+    print('Plotting...')
     jobs.plot(x="Occupation_title_click_o", y='Annual_mean_wage', kind='barh')
     jobs.plot(x="Employment_per_1,000_jobs", y='Occupation_title_click_o', kind='scatter')
     pp.show()
